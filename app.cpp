@@ -50,8 +50,8 @@ WiFiClient MyWifiClient;
 #endif
 
 MqttClient *MQTTclient;
-const char *mqttUser = "tuw";
-const char *mqttPassword = "project2017";
+const char *mqttUser = "";
+const char *mqttPassword = "";
 
 bool hadMQTT = false; // for MQTT re-connection tries
 byte present = 0; // current presence status
