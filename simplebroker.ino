@@ -69,8 +69,8 @@ char ap_password[PARAMLEN] = "";
 char ap_ip[PARAMLEN] = "";
 
 char* config_page = NULL;
-const char* ota_username = "tuw";
-const char* ota_password = "pt2";
+const char* ota_username = "";
+const char* ota_password = "";
 
 // create web page with current parameters
 void fillPage(void)
