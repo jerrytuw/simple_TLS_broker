@@ -265,7 +265,7 @@ void setup() {
     Serial.println();
   }
   configServer = new WebServer(WiFi.softAPIP(), 80);
-  broker.setlogin("user", "pass");
+  broker.setlogin("", "");
   broker.begin();
   Serial.printf("MQTTS broker ready @ %s on port %d\n", WiFi.softAPIP().toString().c_str() , PORT);
 
