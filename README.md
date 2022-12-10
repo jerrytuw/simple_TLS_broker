@@ -6,10 +6,9 @@ ESP32 NAT code inspired by https://github.com/paclema/esp32_lwip_nat_example
 Includes a modified version of the configuration web interface including OTA support
 
 # TinyMqttSecure
-TinyMqtt broker code modified with ESP32_HTTPS_Server code for a simple MQTT broker with TLS.
-Based on TinyMqtt https://github.com/hsaturn/TinyMqtt and ESP32_HTTPS_Server https://github.com/fhessel/esp32_https_server libraries.
-Just for my application needs I modified TinyMqtt code and combined it with slightly adapted HTTPSServer and HTTPSConnection classes 
-as link to the ESP32_HTTPS_Server library to make use of HTTPSConnection instead of WiFiClient on the transport level.
+TinyMqtt broker code modified with stripped down esp_https_server code for a simple MQTT broker with TLS.
+Based on TinyMqtt https://github.com/hsaturn/TinyMqtt and ESPIDF esp_https_server example.
+Just for my application needs I modified TinyMqtt code and combined it with stripped down code from esp_https_server as TLS server. 
 
    Essential function tested:
     Sketch for WIFI NAT plus simple MQTTS broker allowing communication of several MQTTS clients via e.g. port 8883 with TLS.
