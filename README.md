@@ -1,5 +1,5 @@
 # Simple ESP32 Arduino all-in-one NAT router, TLS MQTT broker and client app sketch
-Arduino IDE ESP32 all-in-one sketch: WIFI NAT, MQTTs Broker and MQTT client app
+Arduino IDE ESP32 all-in-one sketch: WIFI NAT, MQTTs Broker and MQTT client app. 
 Luckily, with each version, the Arduino ESP32 core comprises more and more of the ESP-IDF code base except for yet some parts excluded by compile flags.
 Therefore, with few exceptions ESPIDF exampels can also be compiled in the Arduino IDE.
 
