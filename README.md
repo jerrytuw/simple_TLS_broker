@@ -23,7 +23,6 @@ Based on TinyMqtt https://github.com/hsaturn/TinyMqtt and ESP-IDF esp_https_serv
 Just for my application needs I modified TinyMqtt code and combined it with stripped down code from esp_https_server as TLS server. 
 Login setting for username and password and check added, default is "" "" for no credentials needed.
 QoS, certificate check, retained messages etc. not checked/finished yet in TinyMqtt!
-    Note: streaming functions only necessary for debugging placed in extra file MqttStreaming.h
 
 # MQTT client app
 Plus an independent example app (in app.cpp) which for simplicity connects locally to the MQTT broker as subroutine.
