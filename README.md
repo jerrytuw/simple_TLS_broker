@@ -7,6 +7,8 @@ This is an ESP32/Arduino sketch to combine some code fragments from other Platfo
 Background: I wanted to have a secure combined solution running on a single ESP32 for a WIFI NAT router and control app and found different pieces of code for PlatformIO and ESP-IDF which I then tried to combine in one Arduino IDE sketch for simplicity. I also wanted a secure MQTT broker in the core to protect WIFI communication and easy configuration and OTA update via web page. The config web page should be password protected. 
 Config server and MQTTS broker should both be listening only on the local IP address so nothing should be accessible from the uplink side but local WIFI clients should have uplink access.
 
+Note: the sketch uses Arduino loop polling, so be careful about long blocking delays in the app.
+
 # NAT WIFI Router
 ESP32 NAT code inspired by https://github.com/paclema/esp32_lwip_nat_example.
 Creates a local WIFI AP and can connect to an upstream WIFI with routing.
