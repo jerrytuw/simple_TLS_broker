@@ -1,6 +1,15 @@
 #include <WiFi.h>
 #include "nvs.h"
 #include "nvs_flash.h"
+
+//#define NAT_DEBUG
+
+#ifdef NAT_DEBUG
+#define debug(...) { printf (__VA_ARGS__);}
+#else
+#define debug(...) {}
+#endif
+
 #define PARAM_NAMESPACE "esp32_nat"
 #define PARAMLEN 50
 

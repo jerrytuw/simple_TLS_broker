@@ -12,6 +12,7 @@
 
 #include <esp_http_server.h>
 #include "esp_httpd_priv.h"
+#include "tlsserver.h"
 
 static const char *TAG = "httpd_sess";
 

@@ -69,8 +69,8 @@ char ap_password[PARAMLEN] = "";
 char ap_ip[PARAMLEN] = "";
 
 char* config_page = NULL;
-const char* ota_username = "";
-const char* ota_password = "";
+const char* ota_username = "tuw";
+const char* ota_password = "pt2";
 
 // create web page with current parameters
 void fillPage(void)
@@ -93,7 +93,7 @@ void fillPage(void)
     strlen(safe_ent_username) +
     strlen(safe_ent_identity) +
     256; // some more for parameters
-  //Serial.printf("len=%d\n", page_len);
+  debug("html len=%d\n", page_len);
 
   if (config_page) free(config_page);
   config_page = (char *)malloc(sizeof(char) * page_len);
@@ -161,7 +161,7 @@ bool parseUri(String getLine)
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  pinMode(23, INPUT_PULLUP);
+  pinMode(23, INPUT_PULLUP); // for erasing nvs
   delay(300);
   if (digitalRead(23) == 0) nvs_flash_erase(); // hold low during boot for erase
   initialize_nvs();
@@ -183,17 +183,17 @@ void setup() {
   WiFi.mode(WIFI_MODE_APSTA);
   if (sta_ssid[0]) // is the uplink SSID configured?
   {
-    Serial.printf("\nConnect to WIFI: %s ", sta_ssid);
+    printf("\nConnect to WIFI: %s ", sta_ssid);
     WiFi.begin(sta_ssid, sta_password);
     int round = 0;
     while (WiFi.status() != WL_CONNECTED) {
-      Serial.print('.');
+      printf(".");
       delay(500);
       if (round++ > 10) break;
     }
     if (round <= 10)
     {
-      Serial.printf("\nUplink connected to: %s (dns: %s / %s)\n",
+      printf("\nUplink connected to: %s (dns: %s / %s)\n",
                     WiFi.localIP().toString().c_str(),
                     WiFi.dnsIP(0).toString().c_str(),
                     WiFi.dnsIP(1).toString().c_str());
@@ -204,7 +204,7 @@ void setup() {
 
       // For esp32:
 #ifndef __DHCPS_H__
-      Serial.println("DHCPS_H not included");
+      printf("DHCPS_H not included\n");
 #endif
       uplinkConnected = true;
     }
@@ -213,7 +213,7 @@ void setup() {
   //**
   //***********************************
   WiFi.softAP(ap_ssid, ap_password);
-  Serial.printf("\nStarted AP: %s at %s\n", ap_ssid, WiFi.softAPIP().toString().c_str());
+  printf("\nStarted AP: %s at %s\n", ap_ssid, WiFi.softAPIP().toString().c_str());
 
   if (uplinkConnected)
   {
@@ -224,32 +224,32 @@ void setup() {
     tcpip_adapter_dns_info_t ip_dns;
 
     err = tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_AP);
-    if (err != ESP_OK) Serial.printf("\ntcpip_adapter_dhcps_stop: err %s", esp_err_to_name(err)) ;
+    if (err != ESP_OK) printf("\ntcpip_adapter_dhcps_stop: err %s", esp_err_to_name(err)) ;
 
     err = tcpip_adapter_get_dns_info(TCPIP_ADAPTER_IF_STA, ESP_NETIF_DNS_MAIN, &ip_dns);
     if (err != ESP_OK)
-      Serial.printf("\ntcpip_adapter_get_dns_info: error %s", esp_err_to_name(err)) ;
+      printf("\ntcpip_adapter_get_dns_info: error %s", esp_err_to_name(err)) ;
 
     // err = tcpip_adapter_set_dns_info(TCPIP_ADAPTER_IF_STA, ESP_NETIF_DNS_FALLBACK, &ip_dns);
-    // Serial.printf("\ntcpip_adapter_set_dns_info ESP_NETIF_DNS_FALLBACK: err %s . ip_dns:" IPSTR, esp_err_to_name(err), IP2STR(&ip_dns.ip.u_addr.ip4)) ;
+    // debug("\ntcpip_adapter_set_dns_info ESP_NETIF_DNS_FALLBACK: err %s . ip_dns:" IPSTR, esp_err_to_name(err), IP2STR(&ip_dns.ip.u_addr.ip4)) ;
 
     err = tcpip_adapter_set_dns_info(TCPIP_ADAPTER_IF_AP, ESP_NETIF_DNS_MAIN, &ip_dns);
     /*if (err == ESP_OK)
-      Serial.printf("\ntcpip_adapter_set_dns_info ESP_NETIF_DNS_MAIN: ip_dns:" IPSTR, IP2STR(&ip_dns.ip.u_addr.ip4)) ;
+      debug("\ntcpip_adapter_set_dns_info ESP_NETIF_DNS_MAIN: ip_dns:" IPSTR, IP2STR(&ip_dns.ip.u_addr.ip4)) ;
       else*/
-    Serial.printf("\ntcpip_adapter_set_dns_info: error %s", esp_err_to_name(err)) ;
+    printf("\ntcpip_adapter_set_dns_info: error %s", esp_err_to_name(err)) ;
 
     // ip_dns.ip.u_addr.ip4.addr = ipaddr_addr("8.8.8.8");
     // ip_dns.ip.type = IPADDR_TYPE_V4;
     //  err = tcpip_adapter_set_dns_info(TCPIP_ADAPTER_IF_STA, ESP_NETIF_DNS_BACKUP, &ip_dns);
-    // Serial.printf("\tcpip_adapter_set_dns_info ESP_NETIF_DNS_BACKUP: err %s . ip_dns:" IPSTR, esp_err_to_name(err), IP2STR(&ip_dns.ip.u_addr.ip4)) ;
+    // debug("\tcpip_adapter_set_dns_info ESP_NETIF_DNS_BACKUP: err %s . ip_dns:" IPSTR, esp_err_to_name(err), IP2STR(&ip_dns.ip.u_addr.ip4)) ;
 
     dhcps_offer_t opt_val = OFFER_DNS; // supply a dns configServer via dhcps
     tcpip_adapter_dhcps_option(ESP_NETIF_OP_SET, ESP_NETIF_DOMAIN_NAME_SERVER, &opt_val, 1);
 
     err = tcpip_adapter_dhcps_start(TCPIP_ADAPTER_IF_AP);
     if (err != ESP_OK)
-      Serial.printf("\ntcpip_adapter_dhcps_start: err %s\n", esp_err_to_name(err)) ;
+      printf("\ntcpip_adapter_dhcps_start: err %s\n", esp_err_to_name(err)) ;
 
     //**  Enable NAT:
     //**
@@ -258,16 +258,15 @@ void setup() {
     // For esp32:
 #if IP_NAPT
     ip_napt_enable(WiFi.softAPIP(), 1);
-    Serial.printf("\nSetup completed - NAPT enabled\n");
+    printf("\nSetup completed - NAPT enabled\n");
 #endif
 
-    //Serial.printf("Heap before: %d\n", ESP.getFreeHeap());
-    Serial.println();
+    //debug("Heap before: %d\n", ESP.getFreeHeap());
   }
   configServer = new WebServer(WiFi.softAPIP(), 80);
-  broker.setlogin("", "");
+  broker.setlogin("user", "pass");
   broker.begin();
-  Serial.printf("MQTTS broker ready @ %s on port %d\n", WiFi.softAPIP().toString().c_str() , PORT);
+  printf("MQTTS broker ready @ %s on port %d\n", WiFi.softAPIP().toString().c_str() , PORT);
 
   fillPage();
 
@@ -293,7 +292,7 @@ void setup() {
   }, []() {
     HTTPUpload& upload = configServer->upload();
     if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("Update: %s\n", upload.filename.c_str());
+      printf("Update: %s\n", upload.filename.c_str());
       if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
         Update.printError(Serial);
       }
@@ -304,14 +303,14 @@ void setup() {
       }
     } else if (upload.status == UPLOAD_FILE_END) {
       if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        printf("Update Success: %u\nRebooting...\n", upload.totalSize);
       } else {
         Update.printError(Serial);
       }
     }
   });
   configServer->begin();
-  Serial.println("Config web server running\n");
+  printf("Config web server running\n");
 
   setup_Client(); // set up client app (defined in app.cpp)
 }
@@ -325,7 +324,7 @@ void loop() {
 
   AP_clients = WiFi.softAPgetStationNum(); // NAT loop
   if (AP_clients_last != AP_clients) {
-    Serial.printf("Stations connected to AP: %d\n", AP_clients);
+    printf("Stations connected to AP: %d\n", AP_clients);
     AP_clients_last = AP_clients;
 
     wifi_sta_list_t wifi_sta_list;
@@ -340,13 +339,12 @@ void loop() {
 
     for (int i = 0; i < adapter_sta_list.num; i++) {
       tcpip_adapter_sta_info_t station = adapter_sta_list.sta[i];
-      Serial.printf("\t - Station %d MAC: ", i);
+      printf("\t - Station %d MAC: ", i);
       for (int i = 0; i < 6; i++) {
-        Serial.printf("%02X", station.mac[i]);
-        if (i < 5)Serial.print(":");
+        printf("%02X", station.mac[i]);
+        if (i < 5) printf(":");
       }
-      Serial.printf("  IP: " IPSTR, IP2STR(&station.ip));
-      Serial.println();
+      printf("  IP: " IPSTR "\n", IP2STR(&station.ip));
     }
   }
 }

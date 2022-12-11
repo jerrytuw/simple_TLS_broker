@@ -50,8 +50,8 @@ WiFiClient MyWifiClient;
 #endif
 
 MqttClient *MQTTclient;
-const char *mqttUser = "";
-const char *mqttPassword = "";
+const char *mqttUser = "tuw";
+const char *mqttPassword = "project2017";
 
 bool hadMQTT = false; // for MQTT re-connection tries
 byte present = 0; // current presence status
@@ -83,13 +83,13 @@ void estimateSettings(int bodySize, bool wheelchair)
     movetime = INCREMENTMAX;
     starttime = millis();
     DOWN;
-    Serial.printf("estimation reset\n");
+    printf("estimation reset\n");
     return;
   }
   if (!wheelchair)
   {
     bodySize = _max(_min(bodySize, 200), 150) - 150; // 150-200cm only
-    Serial.printf("size %d\n", bodySize);
+    printf("size %d\n", bodySize);
     h_sitdown = 50 + ((float)bodySize / 8.); // start with ~3 up to ~8
     t_sitdown = 3;
     h_standup = 53 + ((float)bodySize / 8.);
@@ -111,15 +111,15 @@ void estimateSettings(int bodySize, bool wheelchair)
   movetime = (unsigned long) ((float)INCREMENT * h_sitdown);
   starttime = millis();
   UP;
-  Serial.printf("### estimation results %f and %f, %lu\n", h_sitdown, h_standup, movetime);
+  printf("### estimation results %f and %f, %lu\n", h_sitdown, h_standup, movetime);
   MQTTdebug((String("### estimated hs=") + String(h_sitdown) + String(" hu=") + String(h_standup) + String(" t=") + String(movetime)).c_str());
   /*char msg[100];
-    Serial.printf(msg, "{\"height\": %3.1f, \"tilt\": %3.1f}", h_sitdown, t_sitdown);
+    printf(msg, "{\"height\": %3.1f, \"tilt\": %3.1f}", h_sitdown, t_sitdown);
     MQTTpublish("lift/command/move", msg, false);*/
 
   //endheight = h_standup;
 
-  /*Serial.printf(msg, "{\"height\": %3.1f, \"tilt\": %3.1f}", h_standup, t_standup);
+  /*printf(msg, "{\"height\": %3.1f, \"tilt\": %3.1f}", h_standup, t_standup);
     MQTTpublish("lift/config/end_position", msg, false);*/
 
   MQTTpublish("tts/speak", SPEAK_SET, false);
@@ -139,10 +139,10 @@ char *getJSONval(const char *data, const char *member, unsigned int length)
     {
       while ((*val) && (((*val) == ':') || ((*val) == ' ') || ((*val) == '\'') || ((*val) == '"')))
       {
-        //Serial.printf(*val);
+        //printf(*val);
         val++;
       }
-      //Serial.printf("%s\n",);
+      //printf("%s\n",);
       return val;
     }
   }
@@ -155,7 +155,7 @@ void processstatus(const char* msg, const char* topic, unsigned int length)
   char *val = NULL;
   float h = -1, t = -1;
 
-  Serial.printf("@presence status = %d\n", present);
+  printf("@presence status = %d\n", present);
 
 #ifdef SOMEPRESENCE
   if (present == 0)
@@ -185,7 +185,7 @@ void processstatus(const char* msg, const char* topic, unsigned int length)
           bool wheelchair = (*val == '1');
           //MQTTdebug((String("estimate=") + String(estimation)).c_str());
           //MQTTdebug((String("adjust h=") + String(height) + String(" w=") + String(wheelchair)).c_str());
-          Serial.printf("try estimate %d, %d\n", height, wheelchair);
+          printf("try estimate %d, %d\n", height, wheelchair);
           estimateSettings(height, wheelchair);
           present = 3;
         }
@@ -196,7 +196,7 @@ void processstatus(const char* msg, const char* topic, unsigned int length)
   {
     if (present < 2) present++;
     //MQTTdebug((String("p=") + String(present)).c_str());
-    Serial.printf("%s\n", "else presence");
+    printf("%s\n", "else presence");
   }
 }
 
@@ -206,18 +206,18 @@ void mqttCallback(const MqttClient* /* source */, const Topic& Topic, const char
   char msg[300];
   const char *topic = Topic.c_str();
 
-  Serial.printf("Message arrived in topic: ");
-  Serial.printf("%s %d\n", topic, len);
+  printf("Message arrived in topic: ");
+  printf("%s %d\n", topic, len);
 
-  Serial.printf("Message:");
+  printf("Message:");
   for (int i = 0; i < min(len, sizeof(msg)); i++)
   {
     msg[i] = (char)(payload[i]);
-    Serial.printf("%c", (payload[i]));
+    printf("%c", (payload[i]));
   }
   msg[len] = 0;
 
-  Serial.printf("\n");
+  printf("\n");
 
   if (strstr(topic, MYAPP "/command"))
   {
@@ -250,7 +250,7 @@ void mqttCallback(const MqttClient* /* source */, const Topic& Topic, const char
   // watch presence
   else if (strstr(topic, "presence/event/present"))
   {
-    Serial.printf("presence user ");
+    printf("presence user ");
     if (msg[0] == '1')
     {
       if (present == 0) present = 1; // avoid reset on 2nd person entering at the same time
@@ -263,9 +263,9 @@ void mqttCallback(const MqttClient* /* source */, const Topic& Topic, const char
       starttime = millis();
       DOWN;
       MQTTdebug("Go back to default");
-      Serial.printf("Go back to default\n");
+      printf("Go back to default\n");
     }
-    Serial.printf("%d\n", present);
+    printf("%d\n", present);
   }
   // watch presence data
   else if (strstr(topic, "presence/event/status"))
@@ -305,7 +305,7 @@ void connectMqtt(void)
   MQTTclient->subscribe(MYAPP "/estimate");
   MQTTclient->subscribe("presence/event/status");
   MQTTpublish(MYAPP "/connected", "1", true);
-  Serial.printf("Now client app listening to MQTT ...\n");
+  printf("Now client app listening to MQTT ...\n");
 }
 
 //*****************************************************************************************//
@@ -321,7 +321,7 @@ void setup_Client() {
   MQTTclient = new MqttClient(&broker, "r2d-fx"); // client connects _locally_ as subroutine to broker
   MQTTclient->setCallback(mqttCallback);
   connectMqtt(); // subscribe
-  Serial.printf("Relay module app ready\n");   //shows in serial that it is ready to read
+  printf("Relay module app ready\n");   //shows in serial that it is ready to read
 }
 
 //*****************************************************************************************//
@@ -333,12 +333,12 @@ void loop_Client(void) {
   }
   if (movetime != 0L)
   {
-    Serial.printf("%lu\n", millis() - starttime);
+    printf("%lu\n", millis() - starttime);
     if (((millis() - starttime) > movetime))
     {
       STOP;
       movetime = 0L;
-      Serial.printf("stop\n");
+      printf("stop\n");
       MQTTdebug("stopped");
     }
   }

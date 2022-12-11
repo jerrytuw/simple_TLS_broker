@@ -15,6 +15,7 @@
 
 #include <esp_http_server.h>
 #include "esp_httpd_priv.h"
+#include "tlsserver.h"
 
 typedef struct {
   fd_set *fdset;
@@ -27,7 +28,7 @@ IPAddress ip;
 
 static esp_err_t httpd_accept_conn(struct httpd_data *hd, int listen_fd, struct sock_db **newsession)
 {
-  //printf("new TLS connection\n");
+  debug("new TLS connection\n");
   /* If no space is available for new session, close the least recently used one */
   if (hd->config.lru_purge_enable == true) {
     if (!httpd_is_sess_available(hd)) {
@@ -143,7 +144,7 @@ void process(struct httpd_data *hd, struct sock_db *session) {
 // check if listen socket was connected for new connection
 struct sock_db * checkAvail(struct httpd_data *hd)
 {
-  //printf("avail\n");
+  debug("avail\n");
   struct sock_db *newsession = NULL;
   fd_set read_set;
   FD_ZERO(&read_set);
@@ -161,14 +162,14 @@ struct sock_db * checkAvail(struct httpd_data *hd)
   httpd_sess_set_descriptors(hd, &read_set, &tmp_max_fd); ////seems to be necessary???
   int maxfd = MAX(hd->listen_fd, tmp_max_fd);
   tmp_max_fd = maxfd;
-  //printf("maxfd %d\n",maxfd);
+  debug("maxfd %d\n",maxfd);
 
   int active_cnt = select(maxfd + 1, &read_set, NULL, NULL, &timeout);
   if (active_cnt <= 0) return NULL;
-  //printf("active=%d max=%d\n", active_cnt, maxfd);
+  debug("active=%d max=%d\n", active_cnt, maxfd);
 
   if (FD_ISSET(hd->listen_fd, &read_set)) {
-    //printf("processing listen socket %d\n", hd->listen_fd);
+    debug("processing listen socket %d\n", hd->listen_fd);
     if (httpd_accept_conn(hd, hd->listen_fd, &newsession) != ESP_OK) {
       printf("error accepting new connection\n");
     }
@@ -297,10 +298,10 @@ bool canReadData(struct sock_db * session)
   }
   FD_SET(session->fd, &read_set);
   int active_cnt = select((session->fd) + 1, &read_set, NULL, NULL, &tv);
-  //printf("active=%d max=%d\n", active_cnt, maxfd);
+  debug("canReadData active=%d\n", active_cnt);
 
   if (FD_ISSET(session->fd, &read_set) || httpd_sess_pending(hd, session)) {
-    //printf("data on socket %d\n", session->fd);
+    debug("data on socket %d\n", session->fd);
     return true;
   }
   return false;
@@ -324,10 +325,10 @@ esp_err_t httpd_server(struct httpd_data * hd)
   httpd_sess_set_descriptors(hd, &read_set, &tmp_max_fd);
   int maxfd = MAX(hd->listen_fd, tmp_max_fd);
   tmp_max_fd = maxfd;
-  //printf("server select\n");
+  debug("server select\n");
   ESP_LOGD(TAG, LOG_FMT("doing select maxfd+1 = %d"), maxfd + 1);
   int active_cnt = select(maxfd + 1, &read_set, NULL, NULL, NULL);
-  //printf("server select after\n");
+  debug("server select after\n");
   if (active_cnt < 0) {
     printf("error in select (%d)\n", errno);
     httpd_sess_delete_invalid(hd);
@@ -366,7 +367,7 @@ static void httpd_thread(void *arg)
   struct httpd_data *hd = (struct httpd_data *) arg;
   hd->hd_td.status = THREAD_RUNNING;
 
-  //printf("web server thread started\n");
+  debug("web server thread started\n");
   while (1) {
     vTaskDelay(500);
     /*ret = httpd_server(hd);
@@ -495,7 +496,7 @@ static void httpd_delete(struct httpd_data * hd)
 
 esp_err_t httpd_start(httpd_handle_t *handle, const httpd_config_t *config)
 {
-  //printf("starting httpd\n");
+  debug("starting httpd\n");
   if (handle == NULL || config == NULL) {
     return ESP_ERR_INVALID_ARG;
   }

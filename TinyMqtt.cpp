@@ -4,15 +4,6 @@
 #include "TinyMqtt.h"
 #include <sstream>
 
-void outstring(const char* prefix, const char*p, uint16_t len)
-{
-#ifdef TINY_MQTT_DEBUG
-  Serial << prefix << "='";
-  while (len--) Serial << (char)*p++;
-  Serial << '\'' << endl;
-#endif
-}
-
 MqttBroker::MqttBroker()
 {
   //tlsserver = start_webserver();
@@ -59,11 +50,11 @@ MqttClient::~MqttClient()
 
 void MqttClient::close(bool bSendDisconnect)
 {
-  printf("mqttclient close %s\n", id().c_str());
+  debug("mqttclient close %s\n", id().c_str());
   mqtt_connected = false;
   /*	if (client)	// connected to a remote broker
   	{
-  	debug("close client " << id().c_str());
+  	debug("close client %s\n",id().c_str());
   		if (bSendDisconnect and client->connected())
   		{
   			message.create(MqttMessage::Type::Disconnect);
@@ -95,7 +86,7 @@ void MqttClient::connect(std::string broker, uint16_t port, uint16_t ka)
   if (client) delete client;
   client = new TcpClient;
 
-  debug("Trying to connect to " << broker.c_str() << ':' << port);
+  debug("Trying to connect to %s : %d\n", broker.c_str(), port);
 #ifdef TCP_ASYNC
   client->onData(onData, this);
   client->onConnect(onConnect, this);
@@ -112,14 +103,14 @@ void MqttClient::connect(std::string broker, uint16_t port, uint16_t ka)
 
 void MqttBroker::addClient(MqttClient* client)
 {
-//  Serial.printf("tinymqttbroker addclient client %d\n", client->client);
+  //  debug("tinymqttbroker addclient client %d\n", client->client);
   client->message.reset();
   clients.push_back(client);
 }
 
 void MqttBroker::connect(const std::string& host, uint16_t port)
 {
-  //Serial.printf("tinymqttbroker connect\n");
+  //debug("tinymqttbroker connect\n");
   if (broker == nullptr) broker = new MqttClient;
   broker->connect(host, port);
   broker->parent = this;	// Because connect removed the link
@@ -139,22 +130,22 @@ void MqttBroker::removeClient(MqttClient* remove)
       // (but doing this, check that other clients are not subscribed...)
       // Unless -> we could receive useless messages
       //        -> we are using (memory) one IndexedString plus its string for nothing.
-      debug("Remove " << clients.size());
+      debug("Remove %d\n", clients.size());
       clients.erase(it);
-      debug("Client removed " << clients.size());
+      debug("Client removed %d\n", clients.size());
       return;
     }
   }
-  debug("Error cannot remove client");	// TODO should not occur
+  debug("Error cannot remove client\n");	// TODO should not occur
 }
 
 void MqttBroker::onClient(void* broker_ptr, TcpClient* client)
 {
-  //Serial.printf("tinymqttbroker onclient\n");
+  //debug("tinymqttbroker onclient\n");
   MqttBroker* broker = static_cast<MqttBroker*>(broker_ptr);
 
   broker->addClient(new MqttClient(broker, client));
-  debug("New client");
+  debug("New client\n");
 }
 
 void MqttBroker::loop()
@@ -166,13 +157,13 @@ void MqttBroker::loop()
   {
     WiFiClient client;
     //		onClient(this, &client);
-    //Serial.printf("tinymqttbroker onclient2\n");
+    //debug("tinymqttbroker onclient2\n");
     //MqttBroker* broker = static_cast<MqttBroker*>(this);
     MqttClient *mcl = new MqttClient(this, &client);
     mcl->alive = 0;
     mcl->setConnection(newclient);
     addClient(mcl);
-    //printf("New client2 socket %d\n", newclient->fd);
+    debug("New client2 socket %d\n", newclient->fd);
   }
 
   //tlsserver->loop();
@@ -208,7 +199,7 @@ MqttError MqttBroker::publish(const MqttClient* source, const Topic& topic, Mqtt
 {
   MqttError retval = MqttOk;
 
-  debug("publish ");
+  debug("publish \n");
   int i = 0;
   for (auto client : clients)
   {
@@ -241,7 +232,7 @@ MqttError MqttBroker::publish(const MqttClient* source, const Topic& topic, Mqtt
     //#endif
 
     if (doit) retval = client->publishIfSubscribed(topic, msg);
-    debug("doit publish done");
+    debug("doit publish done\n");
   }
   return retval;
 }
@@ -287,7 +278,7 @@ void MqttClient::loop()
     }
     else if (client && connection && (connection->fd > 0))
     {
-      debug("pingreq client loop");
+      debug("pingreq client loop\n");
       uint16_t pingreq = MqttMessage::Type::PingReq;
       client->write((const char*)(&pingreq), 2);
       clientAlive(0);
@@ -314,9 +305,9 @@ void MqttClient::loop()
         // if not, process it:
   */
   while (/*(connection->fd > 0) &&*/ canReadData(connection)) {
-    //printf("check Socket %d: \n",connection->fd);
+    debug("check Socket %d: \n", connection->fd);
     int readReturnCode = readData(connection, (char*)&byte, 1);
-    //printf("Bytes on Socket: %d\n", readReturnCode);
+    debug("Bytes on Socket: %d\n", readReturnCode);
 
     if (readReturnCode > 0) {
       //  connection->refreshTimeout();
@@ -375,7 +366,7 @@ void MqttClient::onConnect(void *mqttclient_ptr, TcpClient* conn)
   printf("cnx: mqtt connecting\n");
   msg.sendTo(mqtt, __LINE__);
   msg.reset();
-  debug("cnx: mqtt sent " << (dbg_ptr)mqtt->parent);
+  debug("cnx: mqtt sent %d\n", (dbg_ptr)mqtt->parent);
   mqtt->clientAlive(0);
 }
 
@@ -419,7 +410,7 @@ void MqttClient::resubscribe()
 
 MqttError MqttClient::subscribe(Topic topic, uint8_t qos)
 {
-  debug("subsribe(" << topic.c_str() << ")");
+  debug("subsribe(%s)\n", topic.c_str());
   MqttError ret = MqttOk;
 
   subscriptions.insert(topic);
@@ -472,11 +463,7 @@ void MqttClient::processMessage(MqttMessage* mesg)
 #ifdef TINY_MQTT_DEBUG
   if (mesg->type() != MqttMessage::Type::PingReq && mesg->type() != MqttMessage::Type::PingResp)
   {
-#ifdef NOT_ESP_CORE
-    Serial << "---> INCOMING " << _HEX(mesg->type()) << " client(" << (dbg_ptr)client << ':' << clientId << ") mem=" << " ESP.getFreeHeap() " << endl;
-#else
-    Serial << "---> INCOMING " << _HEX(mesg->type()) << " client(" << (dbg_ptr)client << ':' << clientId << ") mem=" << ESP.getFreeHeap() << endl;
-#endif
+    printf("---> INCOMING %02x client %lx : %s mem= %d\n", mesg->type(), (dbg_ptr)client, clientId, ESP.getFreeHeap());
     // mesg->hexdump("Incoming");
   }
 #endif
@@ -516,11 +503,11 @@ void MqttClient::processMessage(MqttMessage* mesg)
       if (mqtt_flags & FlagWill)	// Will topic
       {
         mesg->getString(payload, len);	// Will Topic
-        outstring("WillTopic", payload, len);
+        debug("WillTopic %s\n", std::string(payload, len).c_str());
         payload += len;
 
         mesg->getString(payload, len);	// Will Message
-        outstring("WillMessage", payload, len);
+        debug("WillMessage %s\n", std::string(payload, len).c_str());
         payload += len;
       }
       // FIXME forgetting credential is allowed (security hole)
@@ -581,20 +568,18 @@ void MqttClient::processMessage(MqttMessage* mesg)
       break;
 
     case MqttMessage::Type::PingReq:
-      debug("got pingreq2");
+      debug("got pingreq2\n");
       if (!mqtt_connected) break;
-      debug("got pingreq");
       if (client)
       {
-        debug("got pingreq3");
         uint16_t pingreq = MqttMessage::Type::PingResp;
         writeData(this->connection, (char*)&pingreq, 2);
-        //				client->write((const char*)(&pingreq), 2);
+        //client->write((const char*)(&pingreq), 2);
         bclose = false;
       }
       else
       {
-        debug("internal pingreq ?");
+        debug("internal pingreq ?\n");
       }
       break;
 
@@ -604,13 +589,13 @@ void MqttClient::processMessage(MqttMessage* mesg)
         if (!mqtt_connected) break;
         payload = header + 2;
 
-        debug("un/subscribe loop");
+        debug("un/subscribe loop\n");
         std::string qoss;
         while (payload < mesg->end())
         {
           mesg->getString(payload, len);	// Topic
-          debug( "  topic (" << std::string(payload, len) << ')');
-          outstring("  un/subscribes", payload, len);
+          debug( "  topic (%s)\n", std::string(payload, len).c_str());
+          debug("  un/subscribes %s\n", std::string(payload, len).c_str());
           // subscribe(Topic(payload, len));
           Topic topic(payload, len);
           payload += len;
@@ -619,7 +604,7 @@ void MqttClient::processMessage(MqttMessage* mesg)
             uint8_t qos = *payload++;
             if (qos != 0)
             {
-              debug("Unsupported QOS" << qos << endl);
+              debug("Unsupported QOS %d\n", qos);
               qoss.push_back(0x80);
             }
             else
@@ -633,7 +618,7 @@ void MqttClient::processMessage(MqttMessage* mesg)
               subscriptions.erase(it);
           }
         }
-        debug("end loop");
+        debug("end loop\n");
         bclose = false;
         MqttMessage ack(mesg->type() == MqttMessage::Type::Subscribe ? MqttMessage::Type::SubAck : MqttMessage::Type::UnSuback);
         ack.add(header[0]);
@@ -679,7 +664,7 @@ void MqttClient::processMessage(MqttMessage* mesg)
         }
         else if (parent) // from outside to inside
         {
-          debug("publishing to parent");
+          debug("publishing to parent\n");
           parent->publish(this, published, *mesg);
         }
         bclose = false;
@@ -710,7 +695,7 @@ void MqttClient::processMessage(MqttMessage* mesg)
   }
   else
   {
-    debug("clientalive");
+    debug("clientalive\n");
     clientAlive(parent ? 5 : 0);
   }
 }
@@ -745,11 +730,11 @@ MqttError MqttClient::publishIfSubscribed(const Topic& topic, MqttMessage& msg)
 {
   MqttError retval = MqttOk;
 
-  //printf("mqttclient publish %d \n", subscriptions.size());
+  debug("mqttclient publish %d \n", subscriptions.size());
 
   if (isSubscribedTo(topic))
   {
-    //printf("subscribed to %s\n", topic.c_str());
+    debug("subscribed to %s\n", topic.c_str());
     if (client)
       retval = msg.sendTo(this, __LINE__);
     else
@@ -785,9 +770,9 @@ void MqttMessage::reset()
 
 void MqttMessage::incoming(char in_byte)
 {
-  //printf("%02x", in_byte);
+  debug("%02x", in_byte);
   //fflush(stdout);
-  //Serial.printf("tinymqtt incoming %c\n",in_byte);
+  //debug("tinymqtt incoming %c\n",in_byte);
   buffer += in_byte;
   switch (state)
   {
@@ -837,7 +822,7 @@ void MqttMessage::incoming(char in_byte)
   }
   if (buffer.length() > MaxBufferLength)
   {
-    debug("Too long " << state);
+    debug("Too long %d\n", state);
     reset();
   }
 }
@@ -878,19 +863,19 @@ void MqttMessage::encodeLength()
 
 MqttError MqttMessage::sendTo(MqttClient* client, int line)
 {
-  //Serial.printf("tinymqttbroker send %d bytes FROM LINE %d\n", buffer.size(), line);
+  //debug("tinymqttbroker send %d bytes FROM LINE %d\n", buffer.size(), line);
   if (buffer.size())
   {
-    debug("sending " << buffer.size() << " bytes" << "from: " << line);
+    debug("sending %d bytes from: %d\n", buffer.size(), line);
     encodeLength();
     // hexdump("snd");
     if (client->connection) writeData(client->connection, (char*)&buffer[0], buffer.size());
-    else printf("null connection???\n");
+    else debug("null connection???\n");
     //client->write(&buffer[0], buffer.size());
   }
   else
   {
-    debug("??? Invalid send");
+    debug("??? Invalid send\n");
     return MqttInvalidMessage;
   }
   return MqttOk;
@@ -905,19 +890,18 @@ void MqttMessage::hexdump(const char* prefix) const
   const char* half_sep = " - ";
   std::string ascii;
 #ifdef TINY_MQTT_DEBUG
-  Serial << prefix << " size(" << buffer.size() << "), state=" << state << endl;
+  printf("%s %d state=%02x\n", prefix, buffer.size(), state);
 
   for (const char chr : buffer)
   {
     if ((addr % bytes_per_row) == 0)
     {
-      if (ascii.length()) Serial << hex_to_str << ascii << separator << endl;
-      if (prefix) Serial << prefix << separator;
+      if (ascii.length()) printf("%s%s%s\n",hex_to_str, ascii.c_str(), separator);
+      if (prefix) printf("%s%s", prefix, separator);
       ascii.clear();
     }
     addr++;
-    if (chr < 16) Serial << '0';
-    Serial << _HEX(chr) << ' ';
+    printf("%02x ",chr);
 
     ascii += (chr < 32 ? '.' : chr);
     if (ascii.length() == (bytes_per_row / 2)) ascii += half_sep;
@@ -926,13 +910,12 @@ void MqttMessage::hexdump(const char* prefix) const
   {
     while (ascii.length() < bytes_per_row + strlen(half_sep))
     {
-      Serial << "   ";	// spaces per hexa byte
+      printf("   ");	// spaces per hexa byte
       ascii += ' ';
     }
-    Serial << hex_to_str << ascii << separator;
+    printf("%s %s %s\n", hex_to_str, ascii.c_str(), separator);
   }
-
-  Serial << endl;
+  printf("\n");
 #else
   printf("msg:\n");
   for (const char chr : buffer) printf("%02x", chr);

@@ -33,9 +33,9 @@
 //#define TINY_MQTT_DEBUG
 
 #ifdef TINY_MQTT_DEBUG
-#define debug(what) { Serial << (int)__LINE__ << ' ' << what << endl; delay(100); }
+#define debug(...) { printf (__VA_ARGS__);}
 #else
-#define debug(what) {}
+#define debug(...) {}
 #endif
 
 extern "C" httpd_handle_t start_webserver(unsigned long);
@@ -215,7 +215,7 @@ class MqttClient
     {
       callback = fun;
 #ifdef TINY_MQTT_DEBUG
-      Serial << "Callback set to " << (long)fun << endl;
+      debug("Callback set to %lx\n", (long)fun);
       if (callback) callback(this, "test/topic", "value", 5);
 #endif
     };
@@ -250,22 +250,22 @@ class MqttClient
 #ifdef TINY_MQTT_DEBUG
       (void)indent;
       uint32_t ms = millis();
-      Serial << indent << "+-- " << '\'' << clientId.c_str() << "' " << (connected() ? " ON " : " OFF");
-      Serial << ", alive=" << alive << '/' << ms << ", ka=" << keep_alive << ' ';
-      Serial << (client && client->connected() ? "" : "dis") << "connected";
+      printf("%s+--'%s'%s", indent.c_str(), (connected() ? " ON " : " OFF"));
+      printf(", alive=%dms, ka=%d", alive, keep_alive);
+      printf("%sconnected\n", (client && client->connected() ? "" : "dis"));
       if (subscriptions.size())
       {
         bool c = false;
-        Serial << " [";
+        printf(" [");
         for (auto s : subscriptions)
         {
-          if (c) Serial << ", ";
-          Serial << s.str().c_str();
+          if (c) printf(", ");
+          printf(s.str().c_str());
           c = true;
         }
-        Serial << ']';
+        printf("]");
       }
-      Serial << endl;
+      printf("\n");
 #endif
     }
     void setConnection(struct sock_db *conn) {
@@ -323,7 +323,7 @@ class MqttBroker
     ~MqttBroker();
 
     void begin() {
-      tlsserver=start_webserver(WiFi.softAPIP());  // start HTTP(S) server
+      tlsserver = start_webserver(WiFi.softAPIP()); // start HTTP(S) server
     }
     void setlogin(char * username, char * password) { // data must be static
       auth_user = username;

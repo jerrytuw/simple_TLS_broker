@@ -55,7 +55,7 @@ static const char *TAG = "TLS server";
 */
 void tls_server_user_callback(esp_https_server_user_cb_arg_t *user_cb)
 {
-  //printf("Session Created! Socket fd: %d\n", user_cb->tls->sockfd);
+  debug("Session Created! Socket fd: %d\n", user_cb->tls->sockfd);
   return;
   /*
     const mbedtls_x509_crt *cert;

@@ -1,6 +1,14 @@
 #include "esp_http_server.h"
 #include "esp_httpd_priv.h"
 
+//#define TLS_DEBUG
+
+#ifdef TLS_DEBUG
+#define debug(...) { printf (__VA_ARGS__);}
+#else
+#define debug(...) {}
+#endif
+
 typedef httpd_handle_t tls_handle_t;
 
 #ifdef __cplusplus
