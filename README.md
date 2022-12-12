@@ -10,7 +10,7 @@ Config server and MQTTS broker should both be listening only on the local IP add
 Note: the sketch uses Arduino loop polling, so be careful about long blocking delays in the app.
 
 # NAT WIFI Router
-ESP32 NAT code inspired by https://github.com/paclema/esp32_lwip_nat_example.
+ESP32 NAT code inspired by https://github.com/paclema/esp32_lwip_nat_example and https://github.com/martin-ger/esp32_nat_router.
 Creates a local WIFI AP and can connect to an upstream WIFI with routing.
 !Needs either ESP32 Arduino core 2.05 plus liblwip.a and libvfs.a update or an ESP32 Arduino core with NAPT/FORWARD already compiled in!
 
