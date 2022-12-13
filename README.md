@@ -14,8 +14,8 @@ ESP32 NAT code inspired by https://github.com/paclema/esp32_lwip_nat_example and
 Creates a local WIFI AP and can connect to an upstream WIFI with routing.
 !Needs either ESP32 Arduino core 2.05 plus liblwip.a and libvfs.a update or an ESP32 Arduino core with NAPT/FORWARD already compiled in!
 
-For updating NAPT support: (Windows) in C:\Users\xy\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.5\tools\sdk\esp32\lib replace the 2 files.
-Includes a modified version of a configuration web interface including OTA update support on port 80 with parameters stored in nvs (erase by holding GPIO23 low at boot). Access is password protected.
+For updating NAPT support libraries: (Windows) in C:\Users\xy\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.5\tools\sdk\esp32\lib replace the 2 files.
+Includes a modified version of a configuration web interface including OTA update support on port 80 with parameters stored in nvs (erase by holding GPIO23 low at boot). Access is password protected. For PlatformIO you can put the 2 files in the lib folder and add "build_flags= -Llib -lvfs -llwip" in the platformio.ini.
 
 # TinyMqttSecure
 TinyMqtt broker code modified with stripped down esp_https_server code for a simple MQTT broker with TLS on port 8883.
